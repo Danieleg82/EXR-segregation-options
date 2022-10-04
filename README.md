@@ -5,39 +5,37 @@ Hello Azure friends 😊
 In this article I’d like to talk about traffic segregation over different Expressroute circuits when leveraging Hub & Spoke topologies, and to show the main available possible designs to reach such result.
 Let’s start with the overall requirement:
 
+<img src=pics/Picture1.jpg width="250" height="400" align="center" />
  
 In our scenario we have 2 Azure VNETs with different workload types, needing to connect to Onpremise resources via 2 different Expressroute circuits, but still with possibility to connect to each other.
 This requirement could rise in order to preserve guaranteed bandwidth SLAs and traffic isolation for applications hosted in different segments.
-The traffic from any resource in VNET1 is expected to use ExpressRoute circuit 1 [C1 in all our following diagrams] while traffic from any resource in VNET2 is expected to use ExpressRoute circuit 2 [C2]
+
+**The traffic from any resource in VNET1 is expected to use ExpressRoute circuit 1** [*C1 in all our following diagrams*] while **traffic from any resource in VNET2 is expected to use ExpressRoute circuit 2** [*C2*]
 VNET1 must be able to connect to VNET2 as well, and we should leverage either standard Hub&Spoke or Virtual WAN connectivity models for future scalability.
 
 
-THE PROBLEM: 
+### **THE PROBLEM:**
+
 In Azure – today – we don’t have the possibility to perform the routing customizations needed in order to achieve a granular segregation in an easy and scalable way, not if we want to preserve connectivity traffic between VNETs and we want to leverage a single centralized HUB.
+
 In Hub&Spoke scenarios, if we connect a HUB to 2 circuits, and those were connected to the same remote site, Azure would receive the same set of routes over both links, and – similarly – the IP ranges of Azure side would be equally advertised over both links with no possible differentiation.
-Onprem-side Local-Preferences could be used to prefer a link over the other for certain ranges, but we don’t have a concept of granular Local-Preference to be applied in the Azure HUBs for the return traffic.
-Connection weights (discussed later below) could help redirecting traffic over a single specific link in case of duplicate routes received, but the preferred link would handle the entire traffic with no real traffic segregation.
-“Route Maps”-like concepts are today missing in Azure, but will likely be introduced in the near future. 
+Onprem-side *Local-Preferences* could be used to prefer a link over the other for certain ranges, but we don’t have a concept of granular Local-Preference to be applied in the Azure HUBs for the return traffic.
+
+**Connection weights** (discussed later below) could help redirecting traffic over a single specific link in case of duplicate routes received, but the preferred link would handle the entire traffic with no real traffic segregation.
+*“Route Maps”*-like concepts are today missing in Azure, but will likely be introduced in the near future. 
+
 Fortunately, Azure offers a lot of possible workarounds to achieve the desired result, and we will here explore all the most common available solutions, from the most ordinary ones to the most complex.
 Some of these solutions are based on double-HUB topologies, others try to achieve the same results leveraging a single HUB.
 
 
 
+# **DOUBLE HUB SOLUTIONS**
 
+## **SCENARIOS LEVERAGING VNET PEERING FOR INTER-SPOKE COMMUNICATIONS**
 
+### **SCENARIO 1.A – DOUBLE HUB AND DIRECT PEERING BETWEEN SPOKEs**
 
-
-
-
-
-
-
-DOUBLE HUB SOLUTIONS
-
-SCENARIOS LEVERAGING VNET PEERING FOR INTER-SPOKE COMMUNICATIONS
-
-SCENARIO 1.A – DOUBLE HUB AND DIRECT PEERING BETWEEN SPOKEs
- 
+<img src=pics/1A.jpg />
 
 In this topology we have VNET1 and VNET2 connected to 2 isolated HUBs (standard HUB VNETs, no vWAN).
 Every HUB is connected to a single circuit (C1 or C2)
@@ -67,19 +65,10 @@ TOPOLOGY CONs:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-SCENARIO 1.B – DOUBLE HUB AND DIRECT PEERING BETWEEN HUBs
+### SCENARIO 1.B – DOUBLE HUB AND DIRECT PEERING BETWEEN HUBs
  
+<img src=pics/1B.jpg />
+
 This scenario leverages 2 central standard HUB VNETs (no vWAN).
 VNET1 is peered with HUB1, VNET2 with HUB2
 A VNET peering with no transit option connects the 2 HUBs
@@ -111,13 +100,9 @@ L4	VNET2 + HUB2	Onprem (+ VNET1 + HUB1 in case of re-advertisement)
 
 
 
-
-
-
-
-
-SCENARIO 1.C – DOUBLE HUB AND DIRECT PEERING BETWEEN HUBs + AZURE ROUTE SERVER
+### SCENARIO 1.C – DOUBLE HUB AND DIRECT PEERING BETWEEN HUBs + AZURE ROUTE SERVER
  
+<img src=pics/1C.jpg />
 
 This third variant of double-HUB scenario is probably the most complex to be implemented, but at the same time one of the most interesting ones.
 
@@ -163,28 +148,9 @@ L4	VNET1 + HUB1 + VNET2 + HUB2	Onprem (+ VNET1 + HUB1 in case of re-advertisemen
 
 
 
+### SCENARIO 1.D – DOUBLE vHUB (vWAN) 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-SCENARIO 1.D – DOUBLE vHUB (vWAN) 
-
- 
+ <img src=pics/1D.jpg />
 
 This scenario is conceptually similar to the 1.C, but it’s based on vWAN HUBs (vHUBs) hence without the need of NVAs deployments / VNET peering management / HUB routing configurations
 The scenario is built with 2 separate vHUBs deployed in the context of the same vWAN (vHUBs could be deployed in same region, or different, depending on the specific case).
@@ -211,9 +177,6 @@ TOPOLOGY CONs:
 
 
 
-
-
-
 SUMMARY OF LINK ROUTES:
 
 Link Name	Routes advertised by Azure 	Routes learnt by Azure 
@@ -223,13 +186,14 @@ L3	VNET1 + HUB1 + VNET2 + HUB2	Onprem (+ VNET2 + HUB2 in case of re-advertisemen
 L4	VNET1 + HUB1 + VNET2 + HUB2	Onprem (+ VNET1 + HUB1 in case of re-advertisement)
 
 
-SCENARIOS LEVERAGING EXPRESSROUTE FOR INTER-SPOKE COMMUNICATIONS
+## SCENARIOS LEVERAGING EXPRESSROUTE FOR INTER-SPOKE COMMUNICATIONS
+
 This class of scenarios makes use of the circuit connections to allow communications between spokes VNETs.
 Note that this has implicit repercussions on the circuit’s available bandwidth, and may not be a desirable solution if you want to preserve your circuit’s capacity for pure AzureOnprem traffic, that is one of our prerequisites, but could be an acceptable compromise in case of negligible amount of traffic foreseen for inter-VNET scenarios. 
 
-SCENARIO 2.A – DOUBLE HUB AND EXPRESSROUTE HAIRPINNING WITH “BOW-TIE” CONNECTIONS
+### SCENARIO 2.A – DOUBLE HUB AND EXPRESSROUTE HAIRPINNING WITH “BOW-TIE” CONNECTIONS
 
- 
+ <img src=pics/2A.jpg />
 
 In this scenario we use 2 standard VNET HUBs (no vWAN), both connected to both ExpressRoute circuits, in a so-called “bow-tie” configuration.
 The connection between HUB1 and C1 will be set with higher weight* than the connection between HUB1 and C2.
@@ -261,7 +225,9 @@ L5	VNET1 + HUB1	Onprem + VNET2 + HUB2
 L6	VNET2 + HUB2	Onprem + VNET1 + HUB1
 
 
-SCENARIO 2.B – DOUBLE HUB AND EXPRESSROUTE HAIRPINNING WITH SINGLE SIDE CIRCUIT’S REDUNDANCY
+### SCENARIO 2.B – DOUBLE HUB AND EXPRESSROUTE HAIRPINNING WITH SINGLE SIDE CIRCUIT’S REDUNDANCY
+
+<img src=pics/2B.jpg />
  
 This is just a small variant of 2.A, which could be considered in case we preferred the preservation of C2 capacity over symmetrical fault-tolerance.
 In this scenario, the HUB of VNET1 is connected to C1 only, while the HUB of VNETs is connected to both circuits.
@@ -293,23 +259,15 @@ L5	VNET2 + HUB2	Onprem + VNET1 + HUB1
 
 
 
+# SINGLE HUB SOLUTIONS
 
-
-
-
-
-
-
-
-
-
-SINGLE HUB SOLUTIONS
 Scenarios based on a single central HUB (or vHUB) are implicitly preferrable to double-HUB scenarios, because of the reduced complexity and optimized design, but they – today – do not allow to reach the traffic segregation effect without deep manipulation of advertised routes performed by the Onprem / Provider Edge side.
 Future features like common routers’ Route-maps concept will facilitate these scenarios.
 Let’s explore the main possibilities available today.
 
-SCENARIO 3.A: SINGLE HUB & SEPARATE BGP RANGES ADVERTISEMENT
+### SCENARIO 3.A: SINGLE HUB & SEPARATE BGP RANGES ADVERTISEMENT
  
+ <img src=pics/3A.jpg />
 
 In this scenario, we introduce a single central HUB to terminate both the circuits.
 Note that this solution can be either a standard HUB VNET, or a vHUB (vWAN), with the only difference that in the case of managed HUB the connectivity between VNET1 and VNET2 will require the deployment of a virtual appliance (NVA) in the HUB + Route Tables in the spoke VNETs to bridge their connectivity.
@@ -332,11 +290,6 @@ TOPOLOGY CONs:
 •	In case of standard HUB VNET utilized, it needs NVA/Azure Firewall to bridge inter-VNET traffic
 
 
-
-
-
-
-
 SUMMARY OF LINK ROUTES:
 
 Link Name	Routes advertised by Azure 	Routes learnt by Azure 
@@ -347,12 +300,10 @@ L4	VNET1 + VNET2 + HUB	IP Range 2
 
 
 
-
-
-
-SCENARIO 3.B: SINGLE HUB & ONPREM ROUTES’ CUSTOMIZATION VIA BGP PATH PREPENDING 
+### SCENARIO 3.B: SINGLE HUB & ONPREM ROUTES’ CUSTOMIZATION VIA BGP PATH PREPENDING 
 As alternative to 3.A, we could advertise same ranges over the 2 links but applying AS Path Prepending technique for the ranges which are considered less-preferred over a specific link  in this scenario we would introduce fault-tolerance over the 2 different links
  
+ <img src=pics/3B.jpg />
 
 In our example here, IP Range1 will be the set of IP ranges representing common destinations for VNET1’s workload, and IP Range2 – similarly – will represent the set of endpoints for VNET2’s workload.
 This solution can be either a standard HUB VNET, or a vHUB (vWAN), with the only difference that in the case of managed HUB the connectivity between VNET1 and VNET2 will require the deployment of a virtual appliance (NVA) in the HUB + Route Tables in the spoke VNETs to bridge their connectivity.
@@ -382,7 +333,7 @@ L4	VNET1 + VNET2 + HUB	IP Range 2 + AS-prepended Range 1
 
 
 
-CONCLUSIONS:
+# CONCLUSIONS:
 
 As we’ve seen, there are several possible paths to achieve traffic segregation over different ExpressRoute links, while still leveraging centralized HUB/s solutions.
 Some of these paths require high deployment & management complexity.
@@ -395,16 +346,22 @@ But it’s important to think that – despite lacking today real RouteMaps-like
 
 
 
-CONFIGURATION OF EXPRESSROUTE WEIGHTs
+# CONFIGURATION OF EXPRESSROUTE WEIGHTs
 https://docs.microsoft.com/en-us/azure/expressroute/expressroute-optimize-routing#suboptimal-routing-from-microsoft-to-customer
 https://docs.microsoft.com/en-us/azure/expressroute/expressroute-howto-linkvnet-arm#modify-a-virtual-network-connection 
 
 Editing Connection weight in managed VNET scenario:
 
+<img src=pics/weight1.jpg />
  
 Editing Connection weight in vWAN scenario:
  
- 
+<img src=pics/weight2.jpg />
+
+<img src=pics/weight3.jpg />
+
+<img src=pics/weight4.jpg />
+
  
 
 
