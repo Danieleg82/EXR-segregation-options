@@ -137,7 +137,7 @@ https://github.com/jocortems/azurehybridnetworking/tree/main/ExpressRoute-Transi
 -	To avoid inter-VNET traffic via circuits, Azure routes should not be re-advertised by provider-edge over the 2 circuits.*
 
 *Note about Azure ranges’ re-advertisement: in this scenario, the routing can be influenced by re-advertisement of Azure VNETs’ range learnt from one circuit over the second circuit, depending on the AS path length of routes received from ExpressRoute gateway and from NVAs
-Since routes learnt from ExpressRoute have precedence, traffic between VNETs would take ExpressRoute links in case of routes’ readvertisement, so in this scenario the re-advertisement should be avoided.
+Since routes learnt from ExpressRoute have precedence, traffic between VNETs would take ExpressRoute links in case of routes’ readvertisement, so in this scenario the re-advertisement should be avoided.*
 
 **SUMMARY OF LINK ROUTES:**
 
@@ -169,23 +169,23 @@ Traffic between VNET1 and VNET2 will leverage vWAN backbone as for standard vWAN
 This behavior can be tuned in vWAN by leveraging the feature called HUB routing preferences, which is today a Preview feature (https://docs.microsoft.com/en-us/azure/virtual-wan/about-virtual-hub-routing-preference )
 Setting HRP (Hub routing Preference) to “AS-Path” mode would make vHUB always select best routes depending on AS-Path-length as first decisional parameter.
 
-*Note about Azure ranges’ re-advertisement: as per the above statement, in this scenario the routing can be influenced by re-advertisement of Azure VNETs’ range learnt from one circuit over the second circuit.
 
-TOPOLOGY PROs: 
-•	All the benefits of vWAN’s implicit transit routing and failover capabilities
+**TOPOLOGY PROs:** 
+-	All the benefits of vWAN’s implicit transit routing and failover capabilities
 
-TOPOLOGY CONs: 
-•	Costs: 2 vHUBs with ExpressRoute gateways
+**TOPOLOGY CONs:** 
+-	Costs: 2 vHUBs with ExpressRoute gateways
 
+*Note about Azure ranges’ re-advertisement: as per the above statement, in this scenario the routing can be influenced by re-advertisement of Azure VNETs’ range learnt from one circuit over the second circuit.*
 
+**SUMMARY OF LINK ROUTES:**
 
-SUMMARY OF LINK ROUTES:
-
-Link Name	Routes advertised by Azure 	Routes learnt by Azure 
-L1	VNET1 + HUB1 + VNET2 + HUB2	Onprem (+ VNET1 + HUB1 VNET2 + HUB2 in case of re-advertisement)
-L2	VNET1 + HUB1 + VNET2 + HUB2	Onprem (+ VNET1 + HUB1 + VNET2 + HUB2 in case of re-advertisement)
-L3	VNET1 + HUB1 + VNET2 + HUB2	Onprem (+ VNET2 + HUB2 in case of re-advertisement)
-L4	VNET1 + HUB1 + VNET2 + HUB2	Onprem (+ VNET1 + HUB1 in case of re-advertisement)
+| **Link Name**  | **Routes advertised by Azure** | **Routes learnt by Azure** | 
+| ------------- | ------------- | ------------- |
+| L1  | VNET1 + HUB1 + VNET2 + HUB2  | Onprem (+ VNET1 + HUB1 + VNET2 + HUB2 in case of re-advertisement)  |
+| L2  | VNET1 + HUB1 + VNET2 + HUB2  | Onprem (+ VNET1 + HUB1 + VNET2 + HUB2 in case of re-advertisement)|
+| L3  | VNET1 + HUB1 + VNET2 + HUB2  | Onprem (+ VNET2 + HUB2 in case of re-advertisement)  |
+| L4  | VNET1 + HUB1 + VNET2 + HUB2  | Onprem (+ VNET1 + HUB1 in case of re-advertisement)  |
 
 
 ## SCENARIOS LEVERAGING EXPRESSROUTE FOR INTER-SPOKE COMMUNICATIONS
@@ -199,32 +199,35 @@ Note that this has implicit repercussions on the circuit’s available bandwidth
 
 In this scenario we use 2 standard VNET HUBs (no vWAN), both connected to both ExpressRoute circuits, in a so-called “bow-tie” configuration.
 The connection between HUB1 and C1 will be set with higher weight* than the connection between HUB1 and C2.
-[*see below for weights’ configurations]
+[*see below for weights’ configurations*]
+
 Similar approach – symmetrically – will be adopted for the HUB2
 HUB1 will receive the same set of routes (Onprem ranges + VNET/HUB2 ranges) from the 2 connections. 
 The weight will make sure that C1 will always be used for any connection between VNET1 and Onprem.
 C1 will also be used for traffic between VNET1 and VNET2 in normal conditions.
 In case of failure of C1, C2 will be used by VNEt1 for every connection with Onprem or VNET2
 Local preferences set on Provider side will grant onprem traffic to use the appropriate link to return in Azure.
-TOPOLOGY PROs: 
-•	No VNET-peering needed
-•	Fault tolerance in case of failure of one ExpressRoute link
 
-TOPOLOGY CONs: 
-•	Costs: 2 HUBs (with relevant Expressroute Gateways) 
-•	The inter-VNET traffic will consume circuit’s bandwidth, with relevant possible performance issues.
+**TOPOLOGY PROs:** 
+-	No VNET-peering needed
+-	Fault tolerance in case of failure of one ExpressRoute link
 
-Note about Azure ranges’ re-advertisement: in this scenario, the routing is not supposed to be influenced by re-advertisement of Azure VNETs’ range learnt from one circuit over the second circuit, since such ranges are anyway automatically advertised over both circuits due to the bow-tie configuration
+**TOPOLOGY CONs:** 
+-	Costs: 2 HUBs (with relevant Expressroute Gateways) 
+-	The inter-VNET traffic will consume circuit’s bandwidth, with relevant possible performance issues.
 
-SUMMARY OF LINK ROUTES:
+*Note about Azure ranges’ re-advertisement: in this scenario, the routing is not supposed to be influenced by re-advertisement of Azure VNETs’ range learnt from one circuit over the second circuit, since such ranges are anyway automatically advertised over both circuits due to the bow-tie configuration*
 
-Link Name	Routes advertised by Azure 	Routes learnt by Azure 
-L1	VNET1 + HUB1 + VNET2 + HUB2	Onprem (+ VNET1 + HUB1 VNET2 + HUB2 in case of re-advertisement)
-L2	VNET1 + HUB1 + VNET2 + HUB2	Onprem (+ VNET1 + HUB1 + VNET2 + HUB2 in case of re-advertisement)
-L3	VNET1 + HUB1	Onprem + VNET2 + HUB2 
-L4	VNET2 + HUB2	Onprem + VNET1 + HUB1 
-L5	VNET1 + HUB1	Onprem + VNET2 + HUB2 
-L6	VNET2 + HUB2	Onprem + VNET1 + HUB1
+**SUMMARY OF LINK ROUTES:**
+
+| **Link Name**  | **Routes advertised by Azure** | **Routes learnt by Azure** | 
+| ------------- | ------------- | ------------- |
+| L1  | VNET1 + HUB1 + VNET2 + HUB2  | Onprem (+ VNET1 + HUB1 + VNET2 + HUB2 in case of re-advertisement)  |
+| L2  | VNET1 + HUB1 + VNET2 + HUB2  | Onprem (+ VNET1 + HUB1 + VNET2 + HUB2 in case of re-advertisement)|
+| L3  | VNET1 + HUB1 | Onprem + VNET2 + HUB2   |
+| L4  | VNET2 + HUB2 | Onprem + VNET1 + HUB1   |
+| L5  | VNET1 + HUB1 | Onprem + VNET2 + HUB2   |
+| L6  | VNET2 + HUB2 | Onprem + VNET1 + HUB1  |
 
 
 ### SCENARIO 2.B – DOUBLE HUB AND EXPRESSROUTE HAIRPINNING WITH SINGLE SIDE CIRCUIT’S REDUNDANCY
@@ -237,27 +240,28 @@ While the 2.A was offering the possibility to redirect the VNET1VNET2 traffic
 Under normal conditions, the VNET1VNET2 traffic is here handled through C1 only, unless provider edge side proceeds with routes’ re-advertisements between circuits*, which has here to be avoided to meet the objective of preserving C2’s capacity
 In case of failure of C1, VNET1 will be isolated (hence here talking about “partial” fault-tolerance), but C2 capacity is totally preserved.
 
-Note about Azure ranges’ re-advertisement: in this scenario, the routing is for sure influenced by re-advertisement of Azure VNETs’ range learnt from one circuit over the second circuit.
-In case of re-advertisement, and due to the higher connection’s weight set on the link between HUB2 and C2, all the inter-VNET communications will make use of C2
 
-TOPOLOGY PROs: 
-•	No VNET peering management needed
-•	Partial Fault tolerance in case of failure of one ExpressRoute circuit
+**TOPOLOGY PROs:** 
+-	No VNET peering management needed
+-	Partial Fault tolerance in case of failure of one ExpressRoute circuit
 
-TOPOLOGY CONs: 
-•	Costs: 2 HUBs (with relevant Expressroute Gateways) 
-•	The inter-VNET traffic will consume circuit’s bandwidth, with relevant possible performance issues.
-•	Partial Fault tolerance in case of failure of one ExpressRoute circuit
+**TOPOLOGY CONs:**
+-	Costs: 2 HUBs (with relevant Expressroute Gateways) 
+-	The inter-VNET traffic will consume circuit’s bandwidth, with relevant possible performance issues.
+-	Partial Fault tolerance in case of failure of one ExpressRoute circuit
 
+*Note about Azure ranges’ re-advertisement: in this scenario, the routing is for sure influenced by re-advertisement of Azure VNETs’ range learnt from one circuit over the second circuit.
+In case of re-advertisement, and due to the higher connection’s weight set on the link between HUB2 and C2, all the inter-VNET communications will make use of C2*
 
-SUMMARY OF LINK ROUTES:
+**SUMMARY OF LINK ROUTES:**
 
-Link Name	Routes advertised by Azure 	Routes learnt by Azure 
-L1	VNET1 + HUB1 + VNET2 + HUB2	Onprem (+ VNET1 + HUB1 VNET2 + HUB2 in case of re-advertisement)
-L2	VNET2 + HUB2	Onprem (+ VNET1 + HUB1 VNET2 + HUB2 in case of re-advertisement)
-L3	VNET1 + HUB1	Onprem + VNET2 + HUB2
-L4	VNET2 + HUB2	Onprem + VNET1 + HUB1
-L5	VNET2 + HUB2	Onprem + VNET1 + HUB1
+| **Link Name**  | **Routes advertised by Azure** | **Routes learnt by Azure** | 
+| ------------- | ------------- | ------------- |
+| L1  | VNET1 + HUB1 + VNET2 + HUB2  | Onprem (+ VNET1 + HUB1 + VNET2 + HUB2 in case of re-advertisement)  |
+| L2  | VNET2 + HUB2 | Onprem (+ VNET1 + HUB1 + VNET2 + HUB2 in case of re-advertisement)|
+| L3  | VNET1 + HUB1 | Onprem + VNET2 + HUB2   |
+| L4  | VNET2 + HUB2 | Onprem + VNET1 + HUB1   |
+| L5  | VNET2 + HUB2 | Onprem + VNET1 + HUB1   |
 
 
 
@@ -283,22 +287,24 @@ This feature is – today - still in Preview phase. (https://docs.microsoft.com/
 This setup has no fault-tolerance, since the IP ranges advertised over the 2 circuits are different.
 This scenario is also very unlikely to be considerable, since it’s realistically very difficult to have in a real-life case a so well-defined segregation of Onprem IP ranges correlated with VNET1/VNET2 endpoints.
 
-TOPOLOGY PROs: 
-•	Leveraging a single HUB, with reduced costs
+**TOPOLOGY PROs:**
+-	Leveraging a single HUB, with reduced costs
 
-TOPOLOGY CONs: 
-•	It needs huge routing customization by Onprem / Provider edge side
-•	Not fault-tolerant in case of ExpressRoute link failure
-•	In case of standard HUB VNET utilized, it needs NVA/Azure Firewall to bridge inter-VNET traffic
+**TOPOLOGY CONs:**
+-	It needs huge routing customization by Onprem / Provider edge side
+-	Not fault-tolerant in case of ExpressRoute link failure
+-	In case of standard HUB VNET utilized, it needs NVA/Azure Firewall to bridge inter-VNET traffic
 
 
-SUMMARY OF LINK ROUTES:
+**SUMMARY OF LINK ROUTES:**
 
-Link Name	Routes advertised by Azure 	Routes learnt by Azure 
-L1	VNET1 + VNET2 + HUB	IP Range 1
-L2	VNET1 + VNET2 + HUB	IP Range 2
-L3	VNET1 + VNET2 + HUB	IP Range 1
-L4	VNET1 + VNET2 + HUB	IP Range 2
+| **Link Name**  | **Routes advertised by Azure** | **Routes learnt by Azure** | 
+| ------------- | ------------- | ------------- |
+| L1  | VNET1 + VNET2 + HUB | IP Range 1 |
+| L2  | VNET1 + VNET2 + HUB | IP Range 2 |
+| L3  | VNET1 + VNET2 + HUB | IP Range 1 |
+| L4  | VNET1 + VNET2 + HUB | IP Range 2 |
+
 
 
 
@@ -310,8 +316,6 @@ As alternative to 3.A, we could advertise same ranges over the 2 links but apply
 In our example here, IP Range1 will be the set of IP ranges representing common destinations for VNET1’s workload, and IP Range2 – similarly – will represent the set of endpoints for VNET2’s workload.
 This solution can be either a standard HUB VNET, or a vHUB (vWAN), with the only difference that in the case of managed HUB the connectivity between VNET1 and VNET2 will require the deployment of a virtual appliance (NVA) in the HUB + Route Tables in the spoke VNETs to bridge their connectivity.
 Here as well, the scenario is unlikely to be manageable, since it’s realistically difficult to have in a real-life case a so well-defined segregation of Onprem IP ranges correlated with VNET1/VNET2 endpoints
-
-
 
 
 
