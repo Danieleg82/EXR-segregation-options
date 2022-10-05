@@ -39,31 +39,31 @@ Some of these solutions are based on double-HUB topologies, others try to achiev
 
 In this topology we have VNET1 and VNET2 connected to 2 isolated HUBs (standard HUB VNETs, no vWAN).
 Every HUB is connected to a single circuit (C1 or C2)
-The 2 spoke VNETs are then linked via direct VNET Peering.
+The 2 spoke VNETs are then linked **via direct VNET Peering.**
 
 In this design, C1 receives only the routes of VNET1 from Azure, while C2 receives only the routes of VNET2.
 Onprem can advertise the same set of IP ranges over both links.
 Communication between VNET1 and VNET2 is granted via direct VNET-peering between them.
-Note about Azure ranges’ re-advertisement: in this scenario, the routing is not influenced by re-advertisement of Azure VNETs’ range learnt from one circuit over the second circuit, since VNET peering would have priority as nexthop
 
 
-SUMMARY OF LINK ROUTES:
+**TOPOLOGY PROs:**
+-	No need for any routing manipulation anywhere, neither on Azure nor Onprem side.
 
-Link Name	Routes advertised by Azure 	Routes learnt by Azure 
-L1	VNET1 + HUB1	Onprem (+ VNET2 + HUB2 in case of re-advertisement)
-L2	VNET2 + HUB2	Onprem (+ VNET1 + HUB1 in case of re-advertisement)
-L3	VNET1 + HUB1	Onprem (+ VNET2 + HUB2 in case of re-advertisement)
-L4	VNET2 + HUB2	Onprem (+ VNET1 + HUB1 in case of re-advertisement)
+**TOPOLOGY CONs:**
+-	Costs: 2 HUBs (with relevant Expressroute Gateways) + VNET peering
+- Management of the spokes’ direct VNET peerings (imagine you had to connect not 2, but “N” spokes…)
+-	Not fault-tolerant: if one circuit is down, traffic can’t move to the other circuit
 
-TOPOLOGY PROs: 
-•	No need for any routing manipulation anywhere, neither on Azure nor Onprem side.
-TOPOLOGY CONs: 
-•	Costs: 2 HUBs (with relevant Expressroute Gateways) + VNET peering
-•	Management of the spokes’ direct VNET peerings (imagine you had to connect not 2, but “N” spokes…)
-•	Not fault-tolerant: if one circuit is down, traffic can’t move to the other circuit
+*Note about Azure ranges’ re-advertisement: in this scenario, the routing is not influenced by re-advertisement of Azure VNETs’ range learnt from one circuit over the second circuit, since VNET peering would have priority as nexthop*
 
+**SUMMARY OF LINK ROUTES:**
 
-
+| **Link Name**  | **Routes advertised by Azure** | **Routes learnt by Azure** | 
+| ------------- | ------------- | ------------- |
+| L1  | VNET1 + HUB1  | Onprem (+ VNET2 + HUB2 in case of re-advertisement)  |
+| L2  | VNET2 + HUB2  | Onprem (+ VNET1 + HUB1 in case of re-advertisement)  |
+| L3  | VNET1 + HUB1  | Onprem (+ VNET2 + HUB2 in case of re-advertisement)  |
+| L4  | VNET2 + HUB2  | Onprem (+ VNET1 + HUB1 in case of re-advertisement)  |
 
 ### SCENARIO 1.B – DOUBLE HUB AND DIRECT PEERING BETWEEN HUBs
  
@@ -77,26 +77,26 @@ Route tables will be needed in the spoke VNETs as well, in order to redirect tra
 Here as well, C1 receives only the routes of VNET1 from Azure, while C2 receives only the routes of VNET2.
 This design allows to interconnect spokes without leveraging a high number of VNET peerings, hence it reduces topology complexity, but it doesn’t offer fault-tolerance in case of failure of one ExpressROute circuit.
 
+**TOPOLOGY PROs:**
+-	No need for any routing manipulation anywhere, neither on Azure nor Onprem side.
+-	No peering between spokes, just a central peering at HUB level
 
+**TOPOLOGY CONs:**
+-	Costs: 2 HUBs (with relevant Expressroute Gateways) + central HUB VNET peering + NVAs
+-	Deployment / configuration complexity (Route tables / NVA … )
+-	Potential performance concerns due to possible NVA-related bottlenecks
+-	Not fault-tolerant: if one circuit is down, traffic can’t move to the other circuit
 
-TOPOLOGY PROs: 
-•	No need for any routing manipulation anywhere, neither on Azure nor Onprem side.
-•	No peering between spokes, just a central peering at HUB level
+*Note about Azure ranges’ re-advertisement: in this scenario, the routing is not influenced by re-advertisement of Azure VNETs’ range learnt from one circuit over the second circuit, since UDRs configured at NVA subnet layer would have priority as nexthop, if properly configured with specific spokes’ IP ranges.*
 
-TOPOLOGY CONs: 
-•	Costs: 2 HUBs (with relevant Expressroute Gateways) + central HUB VNET peering + NVAs
-•	Deployment / configuration complexity (Route tables / NVA … )
-•	Potential performance concerns due to possible NVA-related bottlenecks
-•	Not fault-tolerant: if one circuit is down, traffic can’t move to the other circuit
+**SUMMARY OF LINK ROUTES:**
 
-Note about Azure ranges’ re-advertisement: in this scenario, the routing is not influenced by re-advertisement of Azure VNETs’ range learnt from one circuit over the second circuit, since UDRs configured at NVA subnet layer would have priority as nexthop, if properly configured with specific spokes’ IP ranges.
-SUMMARY OF LINK ROUTES:
-
-Link Name	Routes advertised by Azure 	Routes learnt by Azure 
-L1	VNET1 + HUB1	Onprem (+ VNET2 + HUB2 in case of re-advertisement)
-L2	VNET2 + HUB2	Onprem (+ VNET1 + HUB1 in case of re-advertisement)
-L3	VNET1 + HUB1	Onprem (+ VNET2 + HUB2 in case of re-advertisement)
-L4	VNET2 + HUB2	Onprem (+ VNET1 + HUB1 in case of re-advertisement)
+| **Link Name**  | **Routes advertised by Azure** | **Routes learnt by Azure** | 
+| ------------- | ------------- | ------------- |
+| L1  | VNET1 + HUB1  | Onprem (+ VNET2 + HUB2 in case of re-advertisement)  |
+| L2  | VNET2 + HUB2  | Onprem (+ VNET1 + HUB1 in case of re-advertisement)  |
+| L3  | VNET1 + HUB1  | Onprem (+ VNET2 + HUB2 in case of re-advertisement)  |
+| L4  | VNET2 + HUB2  | Onprem (+ VNET1 + HUB1 in case of re-advertisement)  |
 
 
 
@@ -126,25 +126,27 @@ Regarding return traffic (Onprem  Azure): Both circuits will receive routes o
 This article covers a similar setup and provides deeper details about the possible NVA routing configurations 
 https://github.com/jocortems/azurehybridnetworking/tree/main/ExpressRoute-Transit-with-Azure-RouteServer#4-multi-region--multi-nic-nvas-with-route-tables 
 
-TOPOLOGY PROs: 
-•	No peering between spokes, just a central peering at HUB level
-•	Fault tolerance in case of failure of one ExpressRoute link
+**TOPOLOGY PROs:** 
+-	No peering between spokes, just a central peering at HUB level
+-	Fault tolerance in case of failure of one ExpressRoute link
 
-TOPOLOGY CONs: 
-•	Costs: 2 HUBs (with relevant Expressroute Gateways) + central HUB VNET peering + NVAs + ARS
-•	Deployment / Configuration complexity (configuration of NVA BGP settings / VXLAN / IPSEC)
-•	Potential performance concerns due to possible NVA-related bottlenecks
-•	To avoid inter-VNET traffic via circuits, Azure routes should not be re-advertised by provider-edge over the 2 circuits.*
+**TOPOLOGY CONs:**
+-	Costs: 2 HUBs (with relevant Expressroute Gateways) + central HUB VNET peering + NVAs + ARS
+-	Deployment / Configuration complexity (configuration of NVA BGP settings / VXLAN / IPSEC)
+-	Potential performance concerns due to possible NVA-related bottlenecks
+-	To avoid inter-VNET traffic via circuits, Azure routes should not be re-advertised by provider-edge over the 2 circuits.*
 
 *Note about Azure ranges’ re-advertisement: in this scenario, the routing can be influenced by re-advertisement of Azure VNETs’ range learnt from one circuit over the second circuit, depending on the AS path length of routes received from ExpressRoute gateway and from NVAs
 Since routes learnt from ExpressRoute have precedence, traffic between VNETs would take ExpressRoute links in case of routes’ readvertisement, so in this scenario the re-advertisement should be avoided.
-SUMMARY OF LINK ROUTES:
 
-Link Name	Routes advertised by Azure 	Routes learnt by Azure 
-L1	VNET1 + HUB1 + VNET2 + HUB2	Onprem (VNET2 + HUB2 in case of re-advertisement)
-L2	VNET1 + HUB1 + VNET2 + HUB2	Onprem (+ VNET1 + HUB1 in case of re-advertisement)
-L3	VNET1 + HUB1 + VNET2 + HUB2	Onprem (+ VNET2 + HUB2 in case of re-advertisement)
-L4	VNET1 + HUB1 + VNET2 + HUB2	Onprem (+ VNET1 + HUB1 in case of re-advertisement)
+**SUMMARY OF LINK ROUTES:**
+
+| **Link Name**  | **Routes advertised by Azure** | **Routes learnt by Azure** | 
+| ------------- | ------------- | ------------- |
+| L1  | VNET1 + HUB1 + VNET2 + HUB2  | Onprem (+ VNET2 + HUB2 in case of re-advertisement)  |
+| L2  | VNET1 + HUB1 + VNET2 + HUB2  | Onprem (+ VNET1 + HUB1 in case of re-advertisement)  |
+| L3  | VNET1 + HUB1 + VNET2 + HUB2  | Onprem (+ VNET2 + HUB2 in case of re-advertisement)  |
+| L4  | VNET1 + HUB1 + VNET2 + HUB2  | Onprem (+ VNET1 + HUB1 in case of re-advertisement)  |
 
 
 
