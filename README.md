@@ -69,11 +69,13 @@ Communication between VNET1 and VNET2 is granted via direct VNET-peering between
  
 <img src=pics/1B.jpg />
 
-This scenario leverages 2 central standard HUB VNETs (no vWAN).
+This scenario leverages 2 central **standard HUB VNETs** (no vWAN).
 VNET1 is peered with HUB1, VNET2 with HUB2
 A VNET peering with no transit option connects the 2 HUBs
-Virtual appliances (NVAs) deployed in the HUBs, with appropriate configuration of Route Tables (UDR) configured on their subnets, allow the communications between VNET1 and VNET2, and any other spoke connected to the HUBs.
-Route tables will be needed in the spoke VNETs as well, in order to redirect traffic for remote spokes to the centralized appliances.
+
+**Virtual appliances (NVAs)** deployed in the HUBs, with appropriate configuration of **Route Tables (UDR)** configured on their subnets, allow the communications between VNET1 and VNET2, and any other spoke connected to the HUBs.
+
+*Route tables* will be needed in the spoke VNETs as well, in order to redirect traffic for remote spokes to the centralized appliances.
 Here as well, C1 receives only the routes of VNET1 from Azure, while C2 receives only the routes of VNET2.
 This design allows to interconnect spokes without leveraging a high number of VNET peerings, hence it reduces topology complexity, but it doesn’t offer fault-tolerance in case of failure of one ExpressROute circuit.
 
@@ -106,23 +108,32 @@ This design allows to interconnect spokes without leveraging a high number of VN
 
 This third variant of double-HUB scenario is probably the most complex to be implemented, but at the same time one of the most interesting ones.
 
-It leverages standard HUB VNETs + Azure Route Servers & NVAs and it’s basically the fully customer-managed version of the solution we’ll see later on (Scenario 3) based on vWAN,
-This solution should be preferred to Option 5 below exclusively in case of specific blockers regarding the adoption of vWAN/vHUBs, since this basically offers the same topology but with much higher implementation complexity.
-In this double managed HUB solution, we configure Azure Route Server (ARS) with Branch2Branch option enabled, and BGP-peer it with a virtual appliance in our HUB (we do this on both sides).
+It leverages **standard HUB VNETs + Azure Route Servers & NVAs** and it’s basically the fully customer-managed version of the solution we’ll see later on (Scenario 3) based on vWAN,
+
+This solution should be preferred to Option 5 below **exclusively** in case of specific blockers regarding the adoption of vWAN/vHUBs, since this basically offers the same topology but with much higher implementation complexity.
+In this double managed HUB solution, we configure **Azure Route Server (ARS)** with *Branch2Branch* option enabled, and BGP-peer it with a virtual appliance in our HUB (we do this on both sides).
+
 We create an iBGP peering between the appliances in the different HUBs, so that the routes learnt from one HUB environment are propagated to the second one.
 There are basically 2 ways of setting this up:
-1)Without any tunnelling technology (VXLAN / IPSEC) between the appliances and UDRs configured at NVA subnet level
-2)With VXLAN/IPSEC and no need of UDRs at NVA subnet level
+
+*1)Without any tunnelling technology (VXLAN / IPSEC) between the appliances and UDRs configured at NVA subnet level*
+*2)With VXLAN/IPSEC and no need of UDRs at NVA subnet level*
+
 The routes learnt by first NVA (in HUB1) – including routes learnt from Expressroute C1 branch – will be advertised to the second NVA, and vice versa.
 NVAs must be programmed to perform AS-path override in order to remove ASN 65515 from the path.
+
 ARS will program the routes learnt from the NVA deployed in its own HUB: 2 sets of Onprem routes are expected to be seen by ARS:
+
 -	The first will come from its NVA 
 -	The second will come from the ExpressRoute gateway of the HUB VNET 
+
 Since we’re leveraging Azure Route Server, routes learnt over ExpressRoute have always precedence over routes learnt from other sources*
 This scenario offers implicit failover in case of outage of one circuit.
 No UDRs will be here needed in the spoke VNETs, independently by the usage of a VXLAN/IPSEC tunneling between NVAs
 Note that – in this scenario – NVAs handle both the inter-spoke and potentially as well the SpokeOnprem traffic in case of link failure.
-Regarding return traffic (Onprem  Azure): Both circuits will receive routes of both VNET1 and VNET2, so Local Preference should be used at Onprem side to redirect traffic over the appropriate links.
+
+Regarding return traffic (Onprem to Azure): Both circuits will receive routes of both VNET1 and VNET2, so *Local Preference* should be used at Onprem side to redirect traffic over the appropriate links.
+
 This article covers a similar setup and provides deeper details about the possible NVA routing configurations 
 https://github.com/jocortems/azurehybridnetworking/tree/main/ExpressRoute-Transit-with-Azure-RouteServer#4-multi-region--multi-nic-nvas-with-route-tables 
 
@@ -318,23 +329,23 @@ This solution can be either a standard HUB VNET, or a vHUB (vWAN), with the only
 Here as well, the scenario is unlikely to be manageable, since it’s realistically difficult to have in a real-life case a so well-defined segregation of Onprem IP ranges correlated with VNET1/VNET2 endpoints
 
 
+**TOPOLOGY PROs:**
+-	Leveraging a single HUB, with reduced costs
+-	Fault-tolerance in case of ExpressRoute link failure
 
-TOPOLOGY PROs: 
-•	Leveraging a single HUB, with reduced costs
-•	Fault-tolerance in case of ExpressRoute link failure
-
-TOPOLOGY CONs: 
-•	It needs huge routing customization from Onprem / Provider edge side
-•	In case of standard HUB VNET utilized, it needs NVA/Azure Firewall to bridge inter-VNET traffic
+**TOPOLOGY CONs:** 
+-	It needs huge routing customization from Onprem / Provider edge side
+-	In case of standard HUB VNET utilized, it needs NVA/Azure Firewall to bridge inter-VNET traffic
 
 
-SUMMARY OF LINK ROUTES:
+**SUMMARY OF LINK ROUTES:**
 
-Link Name	Routes advertised by Azure 	Routes learnt by Azure 
-L1	VNET1 + VNET2 + HUB	IP Range 1 + AS-prepended Range 2
-L2	VNET1 + VNET2 + HUB	IP Range 2 + AS-prepended Range 1
-L3	VNET1 + VNET2 + HUB	IP Range 1 + AS-prepended Range 2
-L4	VNET1 + VNET2 + HUB	IP Range 2 + AS-prepended Range 1
+| **Link Name**  | **Routes advertised by Azure** | **Routes learnt by Azure** | 
+| ------------- | ------------- | ------------- |
+| L1  | VNET1 + VNET2 + HUB | IP Range 1 + AS-prepended Range 2 |
+| L2  | VNET1 + VNET2 + HUB | IP Range 2 + AS-prepended Range 1 |
+| L3  | VNET1 + VNET2 + HUB | IP Range 1 + AS-prepended Range 2 |
+| L4  | VNET1 + VNET2 + HUB | IP Range 2 + AS-prepended Range 1 |
 
 
 
