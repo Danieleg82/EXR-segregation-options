@@ -27,6 +27,27 @@ Onprem-side *Local-Preferences* could be used to prefer a link over the other fo
 Fortunately, Azure offers a lot of possible workarounds to achieve the desired result, and we will here explore all the most common available solutions, from the most ordinary ones to the most complex.
 Some of these solutions are based on double-HUB topologies, others try to achieve the same results leveraging a single HUB.
 
+### **TABLE OF CONTENT:**
+
+   [DOUBLE HUB SOLUTIONS](#double-hub-solutions)
+   - [SCENARIOS LEVERAGING VNET PEERING FOR INTER-SPOKE COMMUNICATIONS](#scenarios-leveraging-vnet-peering-for-inter-spoke-communications)
+     - [1.A – DOUBLE HUB AND DIRECT PEERING BETWEEN SPOKEs](#scenario-1a--double-hub-and-direct-peering-between-spokes)
+     - [1.B – DOUBLE HUB AND DIRECT PEERING BETWEEN HUBs](#scenario-1b--double-hub-and-direct-peering-between-hubs)
+     - [1.C – DOUBLE HUB AND DIRECT PEERING BETWEEN HUBs + AZURE ROUTE SERVER](#scenario-1c--double-hub-and-direct-peering-between-hubs--azure-route-server)
+     - [1.D – DOUBLE vHUB (vWAN)](#scenario-1d--double-vhub-vwan)
+   - [SCENARIOS LEVERAGING EXPRESSROUTE FOR INTER-SPOKE COMMUNICATIONS](#scenarios-leveraging-expressroute-for-inter-spoke-communications)
+     - [2.A – DOUBLE HUB AND EXPRESSROUTE HAIRPINNING WITH “BOW-TIE” CONNECTIONS](#scenario-2a--double-hub-and-expressroute-hairpinning-with-bow-tie-connections)
+     - [2.B – DOUBLE HUB AND EXPRESSROUTE HAIRPINNING WITH SINGLE SIDE CIRCUIT’S REDUNDANCY](#scenario-2b--double-hub-and-expressroute-hairpinning-with-single-side-circuits-redundancy)
+
+   [SINGLE HUB SOLUTIONS](#single-hub-solutions)
+   - [3.A: SINGLE HUB & SEPARATE BGP RANGES ADVERTISEMENT](#scenario-3a-single-hub--separate-bgp-ranges-advertisement)
+   - [3.B: SINGLE HUB & ONPREM ROUTES’ CUSTOMIZATION VIA BGP PATH PREPENDING](#scenario-3b-single-hub--onprem-routes-customization-via-bgp-path-prepending)
+
+   [COMPARISON TABLE](#comparison-table)
+   
+   [CONCLUSIONS](#conclusions)
+   
+   [CONFIGURATION OF EXPRESSROUTE WEIGHTs](#configuration-of-expressroute-weights)
 
 
 # **DOUBLE HUB SOLUTIONS**
