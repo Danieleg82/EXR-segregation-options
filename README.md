@@ -190,17 +190,27 @@ Since routes learnt from ExpressRoute have precedence, traffic between VNETs wou
  <img src=pics/1D.jpg />
 
 This scenario is conceptually similar to the 1.C, but it’s based on vWAN HUBs (vHUBs) hence without the need of NVAs deployments / VNET peering management / HUB routing configurations
+
 The scenario is built with 2 separate vHUBs deployed in the context of the same vWAN (vHUBs could be deployed in same region, or different, depending on the specific case).
+
 VNET1 will connect with vHUB1, which will connect to C1
+
 VNET2 will connect with vHUB2, which will connect to C2
 
 The 2 vHUBs are implicitly connected via MS backbone.
+
 vHUB1 will receive Onprem routes both from its direct ExpressRoute gateway connection, and as well as inter-hub routes (from vHUB2).
+
 The default vWAN behavior is to prefer routes learnt from ExpressRoute over routes learnt from other HUBs: this is what will actually do the segregation trick for us and will as well provide high availability to the solution.
+
 VNET1 via vHUB1 will always use C1 to reach Onprem, and VNET2 via vHUB2 will always use C2 for the same.
+
 Provider-edge side will have to be configured with Local Preferences for handling the return traffic over the appropriate link, since every link is receiving routes for both VNETs/HUBs.
+
 In case of failure of one of the ExpressRoute links, the VNETs will leverage the inter-HUB connectivity to reach Onprem, so we have a highly available solution.
+
 Traffic between VNET1 and VNET2 will leverage vWAN backbone as for standard vWAN behavior, unless route of remote spokes were re-advertised over the expressroute circuits*, in which case default behavior would be to prefer ExpressRoute again over inter-hub routes. 
+
 This behavior can be tuned in vWAN by leveraging the feature called HUB routing preferences, which is today a Preview feature (https://docs.microsoft.com/en-us/azure/virtual-wan/about-virtual-hub-routing-preference )
 Setting HRP (Hub routing Preference) to “AS-Path” mode would make vHUB always select best routes depending on AS-Path-length as first decisional parameter.
 
