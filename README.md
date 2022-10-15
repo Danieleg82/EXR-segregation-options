@@ -325,15 +325,22 @@ Let’s explore the main possibilities available today.
  <img src=pics/3A.jpg />
 
 In this scenario, we introduce a single central HUB to terminate both the circuits.
+
 Note that this solution can be either a standard HUB VNET, or a vHUB (vWAN), with the only difference that in the case of managed HUB the connectivity between VNET1 and VNET2 will require the deployment of a virtual appliance (NVA) in the HUB + Route Tables in the spoke VNETs to bridge their connectivity.
+
 The mechanism used here to achieve the traffic segregation is the advertisement of different BGP routes over the 2 different circuits + local preferences.
 C1 will advertise to Azure exclusively the IP ranges of Onprem workloads needing to connect to VNET1 deployments.
 
 Similarly, C2 will advertise to Azure exclusively the IP ranges of Onprem workloads needing to connect to VNET2 deployments.
+
 For the upstream traffic (from Onprem To Azure) customer will have to implement BGP Local Preferences, since Azure will send 2 sets of identical routes over the 2 circuits.
+
 In alternative (but only when using managed HUB VNET approach) customer will soon be able to leverage custom BGP communities to tag routes of VNET1 and VNET2 in a different way, thus facilitating the configuration of routing from Onprem perspective.
+
 This feature is – today - still in Preview phase. (https://docs.microsoft.com/en-us/azure/expressroute/how-to-configure-custom-bgp-communities) 
+
 This setup has no fault-tolerance, since the IP ranges advertised over the 2 circuits are different.
+
 This scenario is also very unlikely to be considerable, since it’s realistically very difficult to have in a real-life case a so well-defined segregation of Onprem IP ranges correlated with VNET1/VNET2 endpoints.
 
 **TOPOLOGY PROs:**
@@ -363,7 +370,9 @@ As alternative to 3.A, we could advertise same ranges over the 2 links but apply
  <img src=pics/3B.jpg />
 
 In our example here, IP Range1 will be the set of IP ranges representing common destinations for VNET1’s workload, and IP Range2 – similarly – will represent the set of endpoints for VNET2’s workload.
+
 This solution can be either a standard HUB VNET, or a vHUB (vWAN), with the only difference that in the case of managed HUB the connectivity between VNET1 and VNET2 will require the deployment of a virtual appliance (NVA) in the HUB + Route Tables in the spoke VNETs to bridge their connectivity.
+
 Here as well, the scenario is unlikely to be manageable, since it’s realistically difficult to have in a real-life case a so well-defined segregation of Onprem IP ranges correlated with VNET1/VNET2 endpoints
 
 
