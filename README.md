@@ -150,7 +150,9 @@ ARS will program the routes learnt from the NVA deployed in its own HUB: 2 sets 
 -	The second will come from the ExpressRoute gateway of the HUB VNET 
 
 Since we’re leveraging Azure Route Server, routes learnt over ExpressRoute have always precedence over routes learnt from other sources*
+
 This scenario offers implicit failover in case of outage of one circuit.
+
 No UDRs will be here needed in the spoke VNETs, independently by the usage of a VXLAN/IPSEC tunneling between NVAs
 Note that – in this scenario – NVAs handle both the inter-spoke and potentially as well the SpokeOnprem traffic in case of link failure.
 
@@ -169,7 +171,7 @@ https://github.com/jocortems/azurehybridnetworking/tree/main/ExpressRoute-Transi
 -	Potential performance concerns due to possible NVA-related bottlenecks
 -	To avoid inter-VNET traffic via circuits, Azure routes should not be re-advertised by provider-edge over the 2 circuits.*
 
-*Note about Azure ranges’ re-advertisement: in this scenario, the routing can be influenced by re-advertisement of Azure VNETs’ range learnt from one circuit over the second circuit, depending on the AS path length of routes received from ExpressRoute gateway and from NVAs
+* *Note about Azure ranges’ re-advertisement: in this scenario, the routing can be influenced by re-advertisement of Azure VNETs’ range learnt from one circuit over the second circuit, depending on the AS path length of routes received from ExpressRoute gateway and from NVAs
 Since routes learnt from ExpressRoute have precedence, traffic between VNETs would take ExpressRoute links in case of routes’ readvertisement, so in this scenario the re-advertisement should be avoided.*
 
 **SUMMARY OF LINK ROUTES:**
