@@ -129,9 +129,9 @@ This design allows to interconnect spokes without leveraging a high number of VN
 
 This third variant of double-HUB scenario is probably the most complex to be implemented, but at the same time one of the most interesting ones.
 
-It leverages **standard HUB VNETs + Azure Route Servers & NVAs** and it’s basically the fully customer-managed version of the solution we’ll see later on (Scenario 3) based on vWAN,
+It leverages **standard HUB VNETs + Azure Route Servers & NVAs** and it’s basically the fully customer-managed version of the solution we’ll see later on (Scenario 1.D) based on vWAN,
 
-This solution should be preferred to Option 5 below **exclusively** in case of specific blockers regarding the adoption of vWAN/vHUBs, since this basically offers the same topology but with much higher implementation complexity.
+This solution should be preferred to the 1.D  **exclusively** in case of specific blockers regarding the adoption of vWAN/vHUBs, since this basically offers the same topology but with much higher implementation complexity.
 In this double managed HUB solution, we configure **Azure Route Server (ARS)** with *Branch2Branch* option enabled, and BGP-peer it with a virtual appliance in our HUB (we do this on both sides).
 
 We create an iBGP peering between the appliances in the different HUBs, so that the routes learnt from one HUB environment are propagated to the second one.
