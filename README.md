@@ -280,9 +280,13 @@ Local preferences set on Provider side will grant onprem traffic to use the appr
 <img src=pics/2B.jpg />
  
 This is just a small variant of 2.A, which could be considered in case we preferred the preservation of C2 capacity over symmetrical fault-tolerance.
+
 In this scenario, the HUB of VNET1 is connected to C1 only, while the HUB of VNETs is connected to both circuits.
-While the 2.A was offering the possibility to redirect the VNET1VNET2 traffic over C2 in case of failure of C1 (with all the relevant consequences in terms of impact on C2’s bandwidth), this 2.B is eliminating that possibility in case we wanted to protect C2’s capacity.
-Under normal conditions, the VNET1VNET2 traffic is here handled through C1 only, unless provider edge side proceeds with routes’ re-advertisements between circuits*, which has here to be avoided to meet the objective of preserving C2’s capacity
+
+While the 2.A was offering the possibility to redirect the VNET1_to_VNET2 traffic over C2 in case of failure of C1 (with all the relevant consequences in terms of impact on C2’s bandwidth), this 2.B is eliminating that possibility in case we wanted to protect C2’s capacity.
+
+Under normal conditions, the VNET1_to_VNET2 traffic is here handled through C1 only, unless provider edge side proceeds with routes’ re-advertisements between circuits*, which has here to be avoided to meet the objective of preserving C2’s capacity.
+
 In case of failure of C1, VNET1 will be isolated (hence here talking about “partial” fault-tolerance), but C2 capacity is totally preserved.
 
 
