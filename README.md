@@ -138,6 +138,7 @@ We create an iBGP peering between the appliances in the different HUBs, so that 
 There are basically 2 ways of setting this up:
 
 *1)Without any tunnelling technology (VXLAN / IPSEC) between the appliances and UDRs configured at NVA subnet level*
+
 *2)With VXLAN/IPSEC and no need of UDRs at NVA subnet level*
 
 The routes learnt by first NVA (in HUB1) – including routes learnt from Expressroute C1 branch – will be advertised to the second NVA, and vice versa.
